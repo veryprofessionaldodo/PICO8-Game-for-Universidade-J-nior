@@ -64,20 +64,8 @@ end
 
 function _update()
 
-	controlos()
-	
-	ship.x = ship.x + incx
-	ship.y = ship.y + incy
-	
-	-- para nao sair das bordas
-	
-	ship.x = min(ship.x, 128)
-	ship.x = max(ship.x, 0)
-	
-	ship.y = min(ship.y, 120)
-	ship.y = max(ship.y, 0)
-	
-	
+	controls()
+		
 	-- atualizar balas
 	
 	update_bullets()
@@ -85,10 +73,14 @@ function _update()
 	-- atualizar inimigos
 	
 	update_enemies()
+	
+	-- verifica colisoes
+	
+	check_collisions()
 
 end
 
-function controlos()
+function controls()
 
 	-- se algum botao estiver a 
 	-- ser premido, acelerar
@@ -117,13 +109,23 @@ function controlos()
 		incy = incy / 2.5 -- parar y
 	end
 	
+	ship.x = ship.x + incx
+	ship.y = ship.y + incy
+	
+	-- para nao sair das bordas
+	
+	ship.x = min(ship.x, 128)
+	ship.x = max(ship.x, 0)
+	
+	ship.y = min(ship.y, 120)
+	ship.y = max(ship.y, 0)	
 	
 	if btn(5) and firecounter <=0 then 
 		-- disparar
 		firecounter = 3
 		fire()
 	end
-
+	
 end
 
 function update_bullets() 
@@ -150,7 +152,7 @@ function fire()
 	 -- velocidade tem agora em
 	 -- conta a velocidade da nave
 	 
-	 sp = 2.5 - incy
+	 sp = 2.5 - incy,
   box={x1=2,x2=5,y1=0,y2=7}
 	}
 	
@@ -178,11 +180,96 @@ function respawn()
   m_y=60-i*8,
   x=-32,
   y=-32,
-  r=12
+  r=12,
   box={x1=0,x2=7,y1=0,y2=7}
 		}
 		add(enemies, enemy)
 	end
+end
+
+function check_collisions()
+
+	-- colisoes entre balas e inimigos
+	
+	for b in all(bullets) do
+	  for e in all(enemies) do
+	  	if is_colliding(b,e) then
+	  		
+	  		-- se estao a colidir
+	  		-- apaga los
+	  		del(enemies, e)
+	  		del(bullets, b)
+	  		
+	  	end
+	  end
+	end
+	
+	
+	-- colisoes entre nave e inimigos
+  for e in all(enemies) do
+  	if is_colliding(e,ship) then
+ 		
+	  		-- se estao a colidir
+	  		-- apaga los
+ 				ship.lives = ship.lives-1
+	  	
+	  		
+	  	end
+		end
+end
+
+-- verifica colisao entre
+-- dois objetos, retorna verdadeiro
+-- ou falso
+
+function is_colliding(a,b)
+
+	-- de acordo com o diagrama 
+	-- dado, separamos os 9 casos
+	-- em 3 ifs
+	
+	-- lado esquerdo
+	if (a.x+a.box.x1<b.x+b.box.x1
+		and a.x+a.box.x2>b.x+b.box.x1)
+		
+		or
+		-- centro
+	   (a.x+a.box.x1>b.x+b.box.x1
+		and a.x+a.box.x2<b.x+b.box.x2)
+		
+		or
+		-- lado direito
+	   (a.x+a.box.x1<b.x+b.box.x2
+		and a.x+a.box.x2>b.x+b.box.x2)
+		
+		then
+			-- cima
+		 if (a.y+a.box.y1<b.y+b.box.y2
+		 and a.y+a.box.y2>b.y+b.box.y2)
+		 
+		 or 
+		 -- centro
+		    (a.y+a.box.y1>b.y+b.box.y1
+		 and a.y+a.box.y2<b.y+b.box.y2)
+		 
+		 or 
+		 
+		 -- baixo
+						(a.y+a.box.y1<b.y+b.box.y1
+		 and a.y+a.box.y2>b.y+b.box.y1)
+		 then
+		 	
+		 	-- se entra aqui e porque
+		 	-- esta a colidir!
+		 	
+		 	return true
+		 	
+		 end
+			
+		end
+		
+
+	return false
 end
 __gfx__
 00077000000770000007700000077000000770000006600000066000000660000006600000000000111001110000000000000000000000000000000000000000
